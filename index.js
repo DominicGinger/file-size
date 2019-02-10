@@ -1,13 +1,14 @@
 const fileProgress = document.getElementById('file-progress')
-const fileSize = document.getElementById('file-size')
+const fileSizeValue = document.getElementById('file-size-value')
 const fileSelect = document.getElementById('file-select')
 const mimeSelect = document.getElementById('mime-select')
 const fileName = document.getElementById('file-name')
+const downloadBtn = document.getElementById('download-btn')
 
 const MAX_CHUNK = 1024*10
 
 function getBytes () {
-  const size = fileSize.value
+  const size = fileSizeValue.value
   switch (fileSelect.value) {
     case 'B':
       return size
@@ -15,14 +16,15 @@ function getBytes () {
       return 1024 * size
     case 'MB':
       return 1024 * 1024 * size
-    case 'GB':
-      return 1024 * 1024 * 1024 * size
   }
 }
-document.querySelector('.download-btn').addEventListener('click', event => {
+
+downloadBtn.addEventListener('click', event => {
+  downloadBtn.classList.add('hide')
+  fileProgress.classList.remove('hide')
   const size = getBytes()
   let href = `data:${mimeSelect.value};charset=utf-8,`
-  const name = `${fileName.value}.${mimeSelect.options[mimeSelect.selectedIndex].dataset.ext}`
+  const name = `${encodeURIComponent(fileName.value)}.${mimeSelect.options[mimeSelect.selectedIndex].dataset.ext}`
   let count = 0
   let i = 0;
   let finished = false;
@@ -32,7 +34,12 @@ document.querySelector('.download-btn').addEventListener('click', event => {
     fileProgress.value = (count * 100) / size
     href += Array(Math.min(MAX_CHUNK, size)).fill('a').join('')
     if (i < size / MAX_CHUNK) {
-      setTimeout(loop, 0)
+      try {
+        setTimeout(loop, 0)
+      } catch (e) {
+        alert(e)
+        throw e
+      }
     } else {
       finished = true
     }
@@ -48,6 +55,8 @@ document.querySelector('.download-btn').addEventListener('click', event => {
       setTimeout(() => {
         document.body.removeChild(a)
       }, 0)
+      fileProgress.classList.add('hide')
+      downloadBtn.classList.remove('hide')
     } else {
       setTimeout(finish, 100)
     }
